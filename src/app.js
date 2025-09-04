@@ -32,29 +32,48 @@ function moveAFile(src, dest) {
   let fullPath;
 
   try {
-    const destStats = fs.statSync(dest, { throwIfNoEntry: false });
+    if (dest.endsWith('/') || dest.endsWith('\\')) {
+      if (!fs.existsSync(dest)) {
+        console.error(
+          new Error('Destination directory does not exist: ' + dest),
+        );
 
-    if (destStats && destStats.isDirectory()) {
+        return;
+      }
+
+      if (!fs.statSync(dest).isDirectory()) {
+        console.error(
+          new Error('Destination path is not a directory: ' + dest),
+        );
+
+        return;
+      }
       fullPath = path.join(dest, path.basename(src));
     } else {
-      fullPath = dest;
-    }
+      const destStats = fs.statSync(dest, { throwIfNoEntry: false });
 
-    const parentDir = path.dirname(fullPath);
-    const parentStats = fs.statSync(parentDir, { throwIfNoEntry: false });
+      if (destStats && destStats.isDirectory()) {
+        fullPath = path.join(dest, path.basename(src));
+      } else {
+        fullPath = dest;
 
-    if (!parentStats || !parentStats.isDirectory()) {
-      console.error(
-        new Error(
-          'Parent directory does not exist or is not a directory: ' + parentDir,
-        ),
-      );
+        const parentDir = path.dirname(fullPath);
+        const parentStats = fs.statSync(parentDir, { throwIfNoEntry: false });
 
-      return;
+        if (!parentStats || !parentStats.isDirectory()) {
+          console.error(
+            new Error(
+              'Parent directory does not exist or is not a directory: ' +
+                parentDir,
+            ),
+          );
+
+          return;
+        }
+      }
     }
 
     if (path.resolve(fullPath) === filePath) {
-      // source и destination совпадают
       return;
     }
 
